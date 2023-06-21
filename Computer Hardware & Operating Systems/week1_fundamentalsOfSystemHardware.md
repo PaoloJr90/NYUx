@@ -80,6 +80,8 @@ Communications between the devices in a computer:
   - When CPU receives an instruction, it performs that task
   - The instruction set is vital to understand processing of code (whether with interpreter or compiler)
 
+  ![instructions](images/week1/instructions.png)
+
   _Fetch-Execute Cycle:_ <br>
 
   - CPU performs a fetch to move the instruction from main memory into the CPU (specifically to an instruction register)
