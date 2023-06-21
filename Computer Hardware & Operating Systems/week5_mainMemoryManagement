@@ -108,6 +108,119 @@ _Converting Logical to Physical_
 
 ![logical_physical_address](./images/week5/logical_physical_address.png)
 
-![](./images/week5/)
-![](./images/week5/)
-![](./images/week5/)
+---
+
+Simple Segmentation
+
+- Each process is divided into unequal sized partitions
+- Logical address now needs a segment number and an offset
+- Storage is similar to Dynamic Partitioning
+
+Virtual Memory
+
+- Assumes paging or segmentation
+- Since the process will only ever access one memory location at a given time, the rest of the memory of the process doesn't need to be in MAIN memory
+- We can swap pages of the process out onto the hard drive (secondary storage) and bring them back later, if needed.
+- Example: the splash screen at startup of a process isn't ever needed again after the process is running
+
+What stays? (in main memory)
+
+- Resident set - the portion of the process in main memory
+- Working set - that portion of the process which is in use
+- In order for the process to run, the working set must be in the resident set
+- The PMT contains a "Present" bit to indicate what pages are present in main memory
+- The PMT contains a "Modify" bit to indicate if the copy of the page on the hard drive is the same as the copy in memory
+- If the MMU encounters a page which the process wants but is not in the resident set, it is called a "Page fault" and the CPU switches to running the OS (like an interrupt)
+
+Benefits of Virtual Memory (VM)
+
+- The programmer perceives a much larger memory space
+- The system can remove unused pages
+- More processes can run in the system resulting in better performance
+
+Lookup Problems
+
+- Now any memory access by the process requires that the MMU determine the physical address, which requires a query to the PMT
+- Each memory access requires two memory accesses
+- To save time, the CPU implements a Translation Lookaside Buffer (TLB) which is a type of content addressable memory which stores a cache of those entries in the PMT which been retrieved recently.
+
+![lookup_problems](./images/week5/lookup_problems.png)
+
+Replacement Policy
+
+- When main memory runs out, the OS needs to remove some pages, this is called stealing
+- If we choose poorly, the result will be worse performance
+- The optimal choice would be to steal the page which is not going to be used for the longest period of time
+- Possible Algorithms
+  - Optimal - not feasible, but used to look back at what processes did
+  - Least-recently used (LRU) - not feasible. Needs timestamps of every memory access for every page in main memory - slows performance
+  - FIFO (First-in First-out) - easy to implement but poor performance
+  - Clock - easy to implement but requires "USE" bits
+
+![replacement_algorithm](./images/week5/replacement_algorithm.png)
+
+Resident Set Management
+
+- Two problems
+  1. How much main memory does each process deserve <br>
+     i. Smaller allocations mean more processes <br>
+     ii. Larger allocations mean less page faults
+  2. When its time to steal a frame, which process do we steal from? <br>
+     i. Local - the process page-faulting will lose a page <br>
+     ii. Global - any process can lose a page
+
+Controlling page faults by resident set size
+
+- If a process fits entirely in main memory, it will not generate any page faults
+- If a process only has one frame, it will generate the maximum number of page faults
+- There is a non-linear progression between those two points
+
+![page_fault](./images/week5/page_fault.png)
+
+_Page Fault Frequency (PFF) Algorithm_
+
+- Examine the time between the last page fault and the current one
+  - If less than a pre-set F value, add a frame
+  - If greater than the pre-set F value, discard all pages with use bit 0, reset all use bits to 0 and continue
+- Upper bounds and lower bounds would be better than just F
+- Performs poorly during locality shifts
+
+_VSWS Algorithm_
+
+- VSWS (Variable-Interval Sampled Working Set) solves the PFFs problems by setting:
+  - A minimum value for clearing unused pages (M)
+  - A minimum number of page faults which must have occurred before clearing unused pages (Q)
+  - A maximum duration before clearing unused pages (L)
+- Below M time unites, always add a frame
+- Between M and L
+  - If there have been less than Q page faults, add a frame
+  - If there have been than Q page faults, discard unused pages, reset use bits, and reset the timer and Q counter
+- At L, discard unused pages, reset use bits and reset the time and Q counter
+
+_Load Control_
+
+- If we have too many page faults, it might be advantageous to remove some processes altogether, swapping
+- Which processes to we choose?
+  - Lowest priority
+  - Faulting process: greater probability that it does not have working set resident
+  - Last process activated: least likely to have working set resident
+  - Process with smallest local resident set
+  - Largest process - most bang for buck
+  - Process with largest remaining execution window
+
+_Shared pages_
+
+- Using virtual memory and/or paging, we can understand how sharing of structures can occur, both processes have entries in their page table for the same frames
+  - Code - since code doesn't change, sharing of code pages is easy
+  - Data - since data changes frequently, we can adapt a Copy-on-Write scenario
+  - Copy-on-Write - allows sharing of pages
+    - The pages table is expanded to allow a "read only" attribute
+    - If a page is marked RO (read-only), any attempt to change that page will result in a trap to the OS
+    - The OS can then copy the page and mark both the original and the copy as RW (read-write) since its no longer shared
+
+_Unix FORK function_
+
+- Useful in systems which don't have thread support, the UNIX fork function creates an exact duplicate copy of the current process
+- This is most easily done by creating a new process, and of course a new page table, but duplicating the data in the original page table
+- Both tables, in their entirety, are marked read only
+- There's no need to actually COPY the memory until something changes, and then only the page changing will be copied.
