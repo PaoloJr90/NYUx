@@ -21,6 +21,7 @@ Inner representation:
 - a sequence of Unicode values
 
 ![unicode](./images/week6/unicode.png)
+
 ![memory](./images/week6/memory.png)
 
 Python `str` literals:
