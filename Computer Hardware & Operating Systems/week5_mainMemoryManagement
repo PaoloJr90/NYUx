@@ -1,0 +1,113 @@
+# Week 5: Main Memory & Memory Management
+
+Reasons for Memory Management:
+
+- In a multiprogramming system, there will never be enough main memory
+- The OS will need to allocate memory to multiple programs running in the system
+- The OS will need to move parts between main memory and secondary memory
+
+Memory Management Requirements (General Laws)
+
+- Relocation
+  - A process could be loaded into any location in main memory
+  - A process can be moved during its lifetime
+  - Programs to be written with relocation in embedded
+- Protection
+  - A process should not be allowed to access memory outside of it allocation
+  - The OS cannot pre-screen the memory accesses, it must be done dynamically
+- Sharing
+  - Some processes might use the same code/data
+- Logical Organization
+  - Modules, Shared Objects or Dynamically Linked Library should be allowed
+- Physical Organization
+  - Mapping logical memory to physical memory
+
+Logical vs. Physical Addresses
+
+- Primarily due to relocation, a program will have to use a logical address to access memory
+- Logical address need to be converted, dynamically, to physical addresses
+- A simple solution to logical addresses could be the offset from the beginning of the program
+- The CPU's Hardware Memory Management unit is responsible for converting, during runtime, the logical address to a physical address
+
+Example:
+Logical Address = 5
+Physical Address = 35 (30 bytes/blocks ahead of the location/house)
+
+![physical_address](./images/week5/physical_address.png)
+
+---
+
+**Partitioning Strategies of Main Memory:**
+
+- Fixed Partitioning
+- Dynamic Partitioning
+- Buddy System
+- Simple Paging
+- Simple Segmentation
+
+_Fixed Partitioning (typically for small applications)_
+
+- Main memory is divided into a static number of parts
+- A process will be allocated one part of equal or greater size than it needs
+- Equal sized partitioning
+  ○ Causes internal fragmentation - wasted space inside the partition
+- Unequal sized partitioning
+  ○ Need to worry about which partition to place the process in
+
+_Dynamic Partitioning (no internal fragmentation)_
+
+- Partitions are created for exactly as much memory as the process needs
+- Causes external fragmentation - wasted memory between allocations
+- Requires compaction - a costly process
+- OS data structures are complex because a process could start anywhere
+- Where does the OS place a partition?
+  - Some algorithms:
+    - Best-fit --> the area with the size closest (causes external fragmentation)
+    - First-fit --> just choose the first spot in memory large enough
+    - Next-fit --> begin looking from the location of last allocation
+
+![partitions](./images/week5/partitions.png)
+
+_Buddy System_
+
+- Compromise between fixed and dynamic
+- Memory is divided and divided again in multiples of 2
+- 2MB of memory might be divided as such, if we need a 100Kb allocation
+- The process would be given the first 128 Kb space
+- If we have a large number of 100 Kb processes we would further divide the larger partitions to accommodate the need
+- This makes the OS structures easier because processes begin and end on a 2^n boundary
+- Internal fragmentation due to wasted internal space (allocated 128 Kb, but using only 100 Kb)
+- External fragmentation - adjacent sections may not be coalesced into a larger partition until those are emptied (freed)
+
+_Simple Paging_
+
+- Memory is broken down into all equal-sized frames (ex: 4K)
+- A process is broken down into the same sized pages (ex: 4K)
+- Since this is RAM, no frame is better suited for the task of storing the page that any other. All have O(1) access time
+- Pages are loaded into non-contiguous frames
+- The OS records the frame number for each page in a Page Map Table (PMT) stored in the PCB
+  The hardware memory management unit (MMU) needs to be able to query the PMT so the format has to be agreed on
+
+![paging](./images/week5/paging.png)
+
+_Benefits of Paging_
+
+- No external fragmentation
+- Minimum of internal fragmentation
+- Easy protection
+- Easy relocation
+- Easy sharing
+
+_Converting Logical to Physical_
+
+- the logical address is relative to the start of the process
+- To calculate the PAGE number, we do bit shifts because pages are always multiples of 2
+- To calculate the OFFSET into the page, we can use XOR
+- The page number can be used as an index (like in an array) into the PMT to find the frame number in main memory
+- The CPU will the bit-shift that frame number and add the offset to find the physical address
+
+![logical_physical_address](./images/week5/logical_physical_address.png)
+
+![](./images/week5/)
+![](./images/week5/)
+![](./images/week5/)
